@@ -52,7 +52,27 @@ const Compress = () => {
 	}
 
 	function huffmancoding(fileByteArray) {
-		
+		var freq = {};
+		for (let i = 0; i < fileByteArray.length; i++) {
+			if (freq[fileByteArray[i]] === undefined) {
+				freq[fileByteArray[i]] = 1;
+			} else {
+				freq[fileByteArray[i]] +=1;
+			}
+		}
+
+		sorted = [];
+		for (var val in freq) {
+			if (sorted.length === 0) {
+				sorted.push(val);
+			} else {
+				i = 0;
+				while (freq[sorted[i]]>freq[val]) {
+					i+=1;
+				}
+				sorted.splice(i, 0, val);
+			}
+		}
 	}
 
 
