@@ -5,6 +5,7 @@ const Compress = () => {
 	var input = '';
 	var fileByteArray = [];
 	var contentBuffer = undefined;
+	var tree = undefined;
 
 	function onInputChange(e) {
 		input = e.target;
@@ -44,7 +45,10 @@ const Compress = () => {
 				    fileByteArray.push(array[i]);
 				}
 
-			huffmancoding(fileByteArray);
+			var res = huffmancoding(fileByteArray);
+			var str = res[0];
+			tree = res[1];
+			console.log(res[0]);
 
 		} catch(err) {
 			console.log(err);
@@ -52,26 +56,83 @@ const Compress = () => {
 	}
 
 	function huffmancoding(fileByteArray) {
-		var freq = {};
-		for (let i = 0; i < fileByteArray.length; i++) {
-			if (freq[fileByteArray[i]] === undefined) {
-				freq[fileByteArray[i]] = 1;
+		var freq = countfreq(fileByteArray);
+		var sorted = sortfreq(freq);
+		var tree = freqtree(sorted);
+		var trimmedtree = (trimtree(tree));
+		var codes = {}
+		assigncodes(trimmedtree, "");
+		return [encode(fileByteArray, codes), trimmedtree];
+
+		//count frequencies and put into map
+		function countfreq(fileByteArray) {
+			var freq = {};
+			for (let i = 0; i < fileByteArray.length; i++) {
+				if (freq[fileByteArray[i]] === undefined) {
+					freq[fileByteArray[i]] = 1;
+				} else {
+					freq[fileByteArray[i]] +=1;
+				}
+			}
+			return freq;
+		}
+
+
+		//sort frequencies
+		function sortfreq(freq) {
+			sorted = [];
+			for (var key in freq) {
+				sorted.push([freq[key], key]);
+			}
+			return sorted.sort();
+		}
+
+
+		//create tree
+		function freqtree(sorted) {
+			while(sorted.length>1) {
+				var leasttwo = sorted.slice(0, 2);
+				var others = sorted.slice(2, sorted.length);
+				var sumfreq = sorted[0][0] + sorted[1][0];
+				sorted = others;
+
+				var two = [sumfreq, leasttwo];
+				sorted.push(two);
+				sorted.sort();
+			}
+
+			return sorted[0];
+		}
+
+		//remove freq counts in tree
+		function trimtree(tree) {
+			var p = tree[1];
+
+			if (typeof p === 'string') {
+				return p;
 			} else {
-				freq[fileByteArray[i]] +=1;
+				return (Array(trimtree(p[0]), trimtree(p[1])));
 			}
 		}
 
-		sorted = [];
-		for (var val in freq) {
-			if (sorted.length === 0) {
-				sorted.push(val);
+		//assign zeros and ones to tree paths
+		function assigncodes(node, pat) {
+			pat = pat || "";
+			if(typeof(node) == typeof("")) {
+				codes[node] = pat;
 			} else {
-				i = 0;
-				while (freq[sorted[i]]>freq[val]) {
-					i+=1;
-				}
-				sorted.splice(i, 0, val);
+				assigncodes(node[0], pat+"0");
+				assigncodes(node[1], pat+"1");
 			}
+			return codes;
+		}
+
+		function encode(array, codes){
+			var output = "";
+			for (var i=0;i<array.length;i++){
+				output = output+codes[array[i].toString()];
+			}
+			return output;
 		}
 	}
 
