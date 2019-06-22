@@ -5,7 +5,7 @@ const Compress = () => {
 	var input = '';
 	var fileByteArray = [];
 	var contentBuffer = undefined;
-	var tree = undefined;
+	var compressed = undefined;
 
 	function onInputChange(e) {
 		input = e.target;
@@ -16,8 +16,9 @@ const Compress = () => {
 		if (input !== '') {
 			processFile()
 		}
+	}
 
-		
+	function onDownloadClick() {
 
 	}
 
@@ -46,8 +47,8 @@ const Compress = () => {
 				}
 
 			var res = huffmancoding(fileByteArray);
-			var str = res[0];
-			tree = res[1];
+			compressed = res[0];
+			var tree = res[1];
 			console.log(res[0]);
 
 		} catch(err) {
@@ -111,7 +112,7 @@ const Compress = () => {
 			if (typeof p === 'string') {
 				return p;
 			} else {
-				return (Array(trimtree(p[0]), trimtree(p[1])));
+				return ([trimtree(p[0]), trimtree(p[1])]);
 			}
 		}
 
@@ -128,9 +129,9 @@ const Compress = () => {
 		}
 
 		function encode(array, codes){
-			var output = "";
+			var output = [];
 			for (var i=0;i<array.length;i++){
-				output = output+codes[array[i].toString()];
+				output.push(codes[array[i].toString()]);
 			}
 			return output;
 		}
@@ -144,6 +145,7 @@ const Compress = () => {
 					<input className= 'f4 pa2 w-70 center' name= 'file' type="file" onChange={(e) => onInputChange(e)}/>
 					<button className='w-30 grow f4 link ph3 pv2 dib white bg-light-purple' onClick= {onButtonClick}>Compress</button>
 					<span id="file"></span>
+					<button className='w-30 grow f4 link ph3 pv2 dib white bg-light-purple' onClick= {onDownloadClick}>Download</button>
 				</div>
 			</div>
 		</div>
