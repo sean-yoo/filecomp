@@ -1,7 +1,7 @@
 .form {
-	width: 700px;
+	width: 400px;
 	background-color: lightblue;
-	background-size:40px 60px;
+	background-size:30px 60px;
 }
 
 input[type="file"]{
