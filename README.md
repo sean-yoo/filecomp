@@ -1,6 +1,21 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+### File Compression Web Application
+Wrote File Compression Web Application in JavaScript using front end interface in React.
+Tools Utilized: React, JavaScript, HTML, CSS
 
-## Available Scripts
+This project is my experimentation and implementation of compression algorithms used in File Compression softwares. I currently have a working model of Huffman Coding optimized for English texts. Texts are compressed to best case 60% of original file size. 
+
+I am currently trying to figure out how to best optimize huffman coding for many different file types, as well as studying how to utilize huffman coding and LZ77 compression to replicate Deflate compression algorithm found in many modern compression softwares.
+
+Project Checklist:
+- ~~Compress Component~~
+- ~~Create input for file~~
+- ~~Compress button and onClick Command~~
+- ~~Huffman Coding Algorithm Method~~
+- Optimize Huffman Coding for Beyond Text Files
+- Create file and download function for compressed file
+- Decompress Component
+
+
 
 In the project directory, you can run:
 
