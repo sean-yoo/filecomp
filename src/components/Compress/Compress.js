@@ -4,8 +4,7 @@ import './Compress.css';
 const Compress = () => {
 	var input = '';
 	var fileByteArray = [];
-	var contentBuffer = undefined;
-	var compressed = undefined;
+	let contentBuffer, compressed;
 
 	function onInputChange(e) {
 		input = e.target;
@@ -19,7 +18,7 @@ const Compress = () => {
 	}
 
 	function onDownloadClick() {
-
+		let compbytes = []
 	}
 
 	function readFileAsync(file) {
@@ -41,101 +40,141 @@ const Compress = () => {
 			let file = input.files[0];
 			contentBuffer = await readFileAsync(file);
 			var array = new Uint8Array(contentBuffer);
+			
 			fileByteArray= [];
-				for (var i = 0; i < array.length; i++) {
-				    fileByteArray.push(array[i]);
-				}
-
-			var res = huffmancoding(fileByteArray);
-			compressed = res[0];
-			var tree = res[1];
-			console.log(res[0]);
+			for (var i = 0; i < array.length; i++) {
+				fileByteArray.push(array[i]);
+			};
+			console.log('this: ', fileByteArray.length * 8)
+			
+			let res = huffmancoding2(fileByteArray);
+			console.log('test: ', res);
+			let len = 0;
+			for (let j = 0; j < res.length; j++) {
+				len += res[j].length;
+			}
+			console.log('that: ', len);
+			
 
 		} catch(err) {
 			console.log(err);
 		}
 	}
 
-	function huffmancoding(fileByteArray) {
-		var freq = countfreq(fileByteArray);
-		var sorted = sortfreq(freq);
-		var tree = freqtree(sorted);
-		var trimmedtree = (trimtree(tree));
-		var codes = {}
-		assigncodes(trimmedtree, "");
-		return [encode(fileByteArray, codes), trimmedtree];
-
-		//count frequencies and put into map
-		function countfreq(fileByteArray) {
-			var freq = {};
-			for (let i = 0; i < fileByteArray.length; i++) {
-				if (freq[fileByteArray[i]] === undefined) {
-					freq[fileByteArray[i]] = 1;
-				} else {
-					freq[fileByteArray[i]] +=1;
-				}
-			}
-			return freq;
-		}
-
-
-		//sort frequencies
-		function sortfreq(freq) {
-			sorted = [];
-			for (var key in freq) {
-				sorted.push([freq[key], key]);
-			}
-			return sorted.sort();
-		}
-
-
-		//create tree
-		function freqtree(sorted) {
-			while(sorted.length>1) {
-				var leasttwo = sorted.slice(0, 2);
-				var others = sorted.slice(2, sorted.length);
-				var sumfreq = sorted[0][0] + sorted[1][0];
-				sorted = others;
-
-				var two = [sumfreq, leasttwo];
-				sorted.push(two);
-				sorted.sort();
-			}
-
-			return sorted[0];
-		}
-
-		//remove freq counts in tree
-		function trimtree(tree) {
-			var p = tree[1];
-
-			if (typeof p === 'string') {
-				return p;
+	function huffmancoding2(fileByteArray) {
+		var freq = {};
+		for (let i = 0; i < fileByteArray.length; i++) {
+			if (freq[fileByteArray[i]] === undefined) {
+				freq[fileByteArray[i]] = 1;
 			} else {
-				return ([trimtree(p[0]), trimtree(p[1])]);
+				freq[fileByteArray[i]] +=1;
 			}
 		}
+		console.log('sean: ',Object.keys(freq).length, freq);
 
-		//assign zeros and ones to tree paths
-		function assigncodes(node, pat) {
-			pat = pat || "";
-			if(typeof(node) == typeof("")) {
-				codes[node] = pat;
+		let queue = new PriorityQueue();
+		for (var key in freq) {
+			queue.push([freq[key], key]);
+		}
+
+		while(queue.size() > 1) {
+			let pair1 = queue.pop();
+			let pair2 = queue.pop();
+			queue.push([pair1[0]+pair2[0], [pair1[1], pair2[1]]]);
+		}
+
+		let tree = queue.pop();
+		console.log("tree: ", tree);
+
+		let code = {};
+		generatecoding(tree[1], "");
+		console.log(code);
+
+
+		let encoded = [];
+		for (let j = 0; j < fileByteArray.length; j++) {
+			encoded.push(code[fileByteArray[j]]);
+		}
+
+		return encoded;
+
+		function generatecoding(arr, prefix) {
+			if (arr instanceof Array) {
+			generatecoding(arr[0], prefix + "0");
+			generatecoding(arr[1], prefix + "1");
 			} else {
-				assigncodes(node[0], pat+"0");
-				assigncodes(node[1], pat+"1");
+			code[arr] = prefix;
 			}
-			return codes;
 		}
+	};
 
-		function encode(array, codes){
-			var output = [];
-			for (var i=0;i<array.length;i++){
-				output.push(codes[array[i].toString()]);
-			}
-			return output;
+	const top = 0;
+	const parent = i => ((i + 1) >>> 1) - 1;
+	const left = i => (i << 1) + 1;
+	const right = i => (i + 1) << 1;
+
+	class PriorityQueue {
+		constructor(comparator = (a, b) => a < b) {
+		this._heap = [];
+		this._comparator = comparator;
 		}
-	}
+		size() {
+		return this._heap.length;
+		}
+		isEmpty() {
+		return this.size() === 0;
+		}
+		peek() {
+		return this._heap[top];
+		}
+		push(...values) {
+		values.forEach(value => {
+			this._heap.push(value);
+			this._siftUp();
+		});
+		return this.size();
+		}
+		pop() {
+		const poppedValue = this.peek();
+		const bottom = this.size() - 1;
+		if (bottom > top) {
+			this._swap(top, bottom);
+		}
+		this._heap.pop();
+		this._siftDown();
+		return poppedValue;
+		}
+		replace(value) {
+		const replacedValue = this.peek();
+		this._heap[top] = value;
+		this._siftDown();
+		return replacedValue;
+		}
+		_greater(i, j) {
+		return this._comparator(this._heap[i], this._heap[j]);
+		}
+		_swap(i, j) {
+		[this._heap[i], this._heap[j]] = [this._heap[j], this._heap[i]];
+		}
+		_siftUp() {
+		let node = this.size() - 1;
+		while (node > top && this._greater(node, parent(node))) {
+			this._swap(node, parent(node));
+			node = parent(node);
+		}
+		}
+		_siftDown() {
+		let node = top;
+		while (
+			(left(node) < this.size() && this._greater(left(node), node)) ||
+			(right(node) < this.size() && this._greater(right(node), node))
+		) {
+			let maxChild = (right(node) < this.size() && this._greater(right(node), left(node))) ? right(node) : left(node);
+			this._swap(node, maxChild);
+			node = maxChild;
+		}
+		}
+	};
 
 
 	return (
